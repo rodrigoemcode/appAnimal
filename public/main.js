@@ -1,16 +1,31 @@
 async function carregarAnimais() {
-    const response = await axios.get('http://localhost:8000/animais');
-    const animais = response.data;
-    const lista = document.getElementById('lista-animais')
+    try {
+        const response = await axios.get('http://localhost:8000/animais');
+        const animais = response.data;
+        const lista = document.getElementById('lista-animais');
 
-    lista.innerHTML = '';
+        lista.innerHTML = '';
 
-    animais.forEach(animal => {
-        const item = document.createElement('li');
-        const linha = `${animal.nome} - ${animal.cor} - ${animal.sexo} - ${animal.idade}`;
-        item.innerText = linha; 
-        lista.appendChild(item);
-    });
+        animais.forEach(animal => {
+            const item = document.createElement('li');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            const linha = `${animal.nome} - ${animal.cor} - ${animal.sexo} - ${animal.idade}`;
+            item.innerText = linha;
+
+            const btnExcluir = document.createElement('button');
+            btnExcluir.className = 'btn btn-danger btn-sm ms-2';
+            btnExcluir.innerText = 'Excluir';
+            btnExcluir.onclick = async () => {
+                await axios.delete(`http://localhost:8000/animais/${animal.id}`);
+                carregarAnimais();
+            };
+
+            item.appendChild(btnExcluir);
+            lista.appendChild(item);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar animais:", error);
+    }
 }
 
 function manipularFormulario() {
@@ -21,15 +36,20 @@ function manipularFormulario() {
         event.preventDefault();
         const nome_animal = input_nome.value;
         
-        await axios.post('http://localhost:8000/animais', { // Corrigido 'animaiss' para 'animais'
-            nome: nome_animal,
-            idade: 4,
-            sexo: 'M',
-            cor: 'Cinza'
-        });
+        try {
+            await axios.post('http://localhost:8000/animais', {
+                nome: nome_animal,
+                idade: 4,
+                sexo: 'M',
+                cor: 'Cinza'
+            });
 
-        alert(`Animal adicionado com sucesso! ${nome_animal}`);
-        carregarAnimais(); // Atualiza a lista de animais
+            alert(`Animal adicionado com sucesso! ${nome_animal}`);
+            carregarAnimais();
+            input_nome.value = ''; // Limpa o campo de entrada
+        } catch (error) {
+            console.error("Erro ao adicionar animal:", error);
+        }
     }
 }
 
